@@ -52,6 +52,14 @@ class Publisher():
         else:
             return formatResponse(request, 0, {'message':'failed'})
 
+    def channelList(self,request,formatResponse):
+        args= request.args
+        if 'username' in args :
+            data = {'channels':db.getPubChannelList(args['username'][0])}
+            return formatResponse(request, 1,data)
+        else:
+            return formatResponse(request, 0, {'message':'failed'}),None,None
+
 
 
 class Subscriber():
@@ -82,8 +90,23 @@ class Subscriber():
                 data = {'messages':'failure'}
                 return formatResponse(request, 0,data),args['username'][0],args['email'][0]
         else:
-            return formatResponse(request, 1, {'message':'failed'}),None,None
+            return formatResponse(request, 0, {'message':'failed'}),None,None
 
+    def channelList(self,request,formatResponse):
+        args= request.args
+        if 'username' in args :
+            data = {'channels':db.getSubChannelList(args['username'][0])}
+            return formatResponse(request, 1,data)
+        else:
+            return formatResponse(request, 0, {'message':'failed'}),None,None
+
+    def getHistory(self,request,formatResponse):
+        args= request.args
+        if 'username' in args :
+            data = {'history':db.getHistory(args['username'][0])}
+            return formatResponse(request, 1,data)
+        else:
+            return formatResponse(request, 0, {'message':'failed'})
 
     def handleSubscribeRequest(self,request,formatResponse):
         # return this for return atleast once policy from the database
@@ -181,6 +204,18 @@ class ServiceHandler(Resource):
             #  only if response was success
             reactor.callLater(0.001, self.handleEmailChange,oldEmail,newEmail)
             return response
+
+        elif request.path=="/pubChannelList":
+            response=self.publisher.channelList(request,self.__format_response)
+            return response
+
+        elif request.path=="/subChannelList":
+            response=self.subscriber.channelList(request,self.__format_response)
+            return response
+        elif request.path=="/getHistory":
+            response=self.subscriber.getHistory(request,self.__format_response)
+            return response
+
 
     def handleEmailChange(self,oldEmail,newEmail):
         for request in self.subscribersList:

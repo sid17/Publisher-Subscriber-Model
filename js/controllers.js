@@ -34,6 +34,7 @@ myApp.controller("Publisher" ,function ($scope,$window,$location,ngNotify)
     $scope.publishChannel="";
     $scope.newEmail="";
     $scope.userName=$window.userName;
+    $scope.channelList=[];
 
     $scope.AddPublishChannel = function()
     {
@@ -51,6 +52,7 @@ myApp.controller("Publisher" ,function ($scope,$window,$location,ngNotify)
                 if (response.status)
                 {
                     ngNotify.set("channel added successfully");
+                    $scope.channelList.push($scope.addedChannelName);
                 }
                 else
                 {
@@ -103,8 +105,41 @@ myApp.controller("Publisher" ,function ($scope,$window,$location,ngNotify)
             },
         });
 
-    }
+    };
 
+    $scope.pubChannelList = function()
+    {
+        $.ajax
+        ({
+            type: "GET",
+            // set the destination for the query
+            url: 'http://127.0.0.1:8000/pubChannelList?username='+$window.userName+'&callback=?',
+            // define JSONP because we're using a different port and/or domain
+            dataType: 'jsonp',
+            // process a successful response
+            success: function(response) {
+                if (response.status)
+                {
+                    for (var i=0;i<response.data.channels.length;i++)
+                    {
+                        $scope.channelList.push(response.data.channels[i]);
+                    }
+                    $scope.$apply();
+                }
+                else
+                {
+                    console.log("An error occured while getting channels");
+                }
+                
+            },
+            // handle error
+            error: function(XMLHttpRequest, textStatus, errorThrown){
+                console.log("An error occured while getting channels");
+            },
+        });
+
+    }
+ 
     $scope.PublishMessage = function()
     {
     	if (!$window.userName)
@@ -148,6 +183,8 @@ myApp.controller("Publisher" ,function ($scope,$window,$location,ngNotify)
     }
     if (!$window.userName)
         $location.path('/');
+    else
+        $scope.pubChannelList()
     
 });
 
@@ -158,6 +195,8 @@ myApp.controller("Subscriber" ,function ($scope,$window,$location,$timeout,ngNot
     $scope.newEmail="";
     $scope.userName=$window.userName;
     $scope.messages=[];
+    $scope.channelList=[];
+    $scope.history=[];
 	$scope.subscribeChannel = function()
     {
 
@@ -173,6 +212,7 @@ myApp.controller("Subscriber" ,function ($scope,$window,$location,$timeout,ngNot
                 if (response.status)
                 {
                     ngNotify.set("successfully subscribed to the channel");
+                    $scope.channelList.push($scope.addedChannelName);
                 }
                 else
                 {
@@ -231,6 +271,76 @@ myApp.controller("Subscriber" ,function ($scope,$window,$location,$timeout,ngNot
 
     }
 
+    $scope.subChannelList = function()
+    {
+        $.ajax
+        ({
+            type: "GET",
+            // set the destination for the query
+            url: 'http://127.0.0.1:8000/subChannelList?username='+$window.userName+'&callback=?',
+            // define JSONP because we're using a different port and/or domain
+            dataType: 'jsonp',
+            // process a successful response
+            success: function(response) {
+                if (response.status)
+                {
+                    for (var i=0;i<response.data.channels.length;i++)
+                    {
+                        $scope.channelList.push(response.data.channels[i]);
+                    }
+                    $scope.$apply();
+                }
+                else
+                {
+                    console.log("An error occured while getting channels");
+                }
+                
+            },
+            // handle error
+            error: function(XMLHttpRequest, textStatus, errorThrown){
+                console.log("An error occured while getting channels");
+            },
+        });
+
+    }
+
+
+    $scope.getHistory = function()
+    {
+        $.ajax
+        ({
+            type: "GET",
+            // set the destination for the query
+            url: 'http://127.0.0.1:8000/getHistory?username='+$window.userName+'&callback=?',
+            // define JSONP because we're using a different port and/or domain
+            dataType: 'jsonp',
+            // process a successful response
+            success: function(response) {
+                if (response.status)
+                {
+                    $scope.history=[];
+                    for (var i=0;i<response.data.history.length;i++)
+                    {
+                        $scope.history.push(response.data.history[i]);
+                    }
+                    ngNotify.set("History Updated");
+                    $scope.$apply();
+                }
+                else
+                {
+                    console.log("An error occured while getting history");
+                }
+                
+            },
+            // handle error
+            error: function(XMLHttpRequest, textStatus, errorThrown){
+                console.log("An error occured while getting history");
+            },
+        });
+
+    }
+
+
     $scope.longPoll = function() 
     {
         console.log("Long Polling Started");
@@ -274,6 +384,12 @@ myApp.controller("Subscriber" ,function ($scope,$window,$location,$timeout,ngNot
     if (!$window.userName)
         $location.path('/');
     else
+    {
         $scope.longPoll();
+        $scope.subChannelList();
+    }
+        
+
+
 
 });

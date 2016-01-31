@@ -116,13 +116,39 @@ def addPubChannel(name,channel):
 	if not channel in pubData.channelList:
 		pubData.channelList.append(channel)
 		pubData.save()
-	print "[Adding Channel] ",name,channel
-	return True
+		print "[Adding Channel] ",name,channel
+		return True
+	else:
+		return False
+	
 
 def getLastTimestamp(subscriber):
 	addSubscriber(subscriber)
 	subData=subscribers.objects.get(subscriberName=subscriber)
 	return subData.lastTimestamp
+
+def getSubChannelList(subscriber):
+	addSubscriber(subscriber)
+	subData=subscribers.objects.get(subscriberName=subscriber)
+	return subData.channelList
+
+def getPubChannelList(publisher):
+	addPublisher(publisher)
+	pubData=publishers.objects.get(publisherName=publisher)
+	return pubData.channelList
+
+def getHistory(subscriber):
+	addSubscriber(subscriber)
+	subData=subscribers.objects.get(subscriberName=subscriber)
+	result=list()
+	for channel in subData.channelList:
+		channelData=channels.objects.get(channelName=channel)
+		l=channelData.messages
+		for i in range(len(l)-1,-1,-1):
+			l[i]['channel']=channel
+			result.append(l[i])
+	return result
+
 
 def updateTimestamp(subscriber,timestamp):
 	addSubscriber(subscriber)
@@ -141,8 +167,10 @@ def addSubChannel(name,channel):
 	if not channel in subData.channelList:
 		subData.channelList.append(channel)
 		subData.save()
-	print "[Adding Channel] ",name,channel
-	return True
+		print "[Adding Channel] ",name,channel
+		return True
+	else:
+		return False
 
 
 
