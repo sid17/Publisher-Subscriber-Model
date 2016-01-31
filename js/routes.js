@@ -1,22 +1,30 @@
 'use strict';
 
-var myApp = angular.module('myApp', []);
+var myApp = angular.module('myApp',['ngRoute','ngNotify']);
 
 myApp.config(function($routeProvider) {
+
     $routeProvider.when(
-    	'/view1', 
+        '/', 
+        {
+            templateUrl: 'partials/menu.html', 
+            controller: 'Menu'
+        });
+
+    $routeProvider.when(
+    	'/subscriber', 
     	{
-    		templateUrl: 'partials/partial1.html', 
-    		controller: 'MyCtrl1'
+    		templateUrl: 'partials/subscriber.html', 
+    		controller: 'Subscriber'
     	});
     $routeProvider.when(
-    	'/view2', 
+    	'/publisher', 
     	{
-    		templateUrl: 'partials/partial2.html', 
-    		controller: 'MyCtrl2'
+    		templateUrl: 'partials/publisher.html', 
+    		controller: 'Publisher'
     	});
     $routeProvider.otherwise(
         {
-            redirectTo: '/view1'
+            redirectTo: '/'
         });
 });
