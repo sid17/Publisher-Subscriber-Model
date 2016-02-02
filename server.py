@@ -40,6 +40,18 @@ class Publisher():
         else:
             return formatResponse(request, 0, {'message':'failed'})
 
+
+    def RemoveChannel(self,request,formatResponse):
+        args = request.args
+        if 'username' in args and 'channel' in args:
+            if (db.removePubChannel(args['username'][0],args['channel'][0])):
+                return formatResponse(request, 1, {'messages':'success'})
+            else:
+                return formatResponse(request, 0, {'messages':'failure'})
+        else:
+            return formatResponse(request, 0, {'message':'failed'})
+
+
     def ChangeEmail(self,request,formatResponse):
         args= request.args
         if 'username' in args and 'email' in args:
@@ -78,6 +90,19 @@ class Subscriber():
                 return formatResponse(request, 0,data),args['channel'][0]
         else:
             return formatResponse(request, 0, {'message':'failed'}),None
+
+    def UnSubscribeChannel(self,request,formatResponse):
+        args = request.args
+        if 'username' in args and 'channel' in args:
+            if (db.removeSubChannel(args['username'][0],args['channel'][0])):
+                data = {'messages':'success'}
+                return formatResponse(request, 1,data),args['channel'][0]
+            else:
+                data = {'messages':'failure'}
+                return formatResponse(request, 0,data),args['channel'][0]
+        else:
+            return formatResponse(request, 0, {'message':'failed'}),None
+
 
     def ChangeEmail(self,request,formatResponse):
         args= request.args
@@ -190,6 +215,10 @@ class ServiceHandler(Resource):
             response=self.publisher.AddChannel(request,self.__format_response)
             return response
 
+        elif request.path=="/pubRemoveChannel":
+            response=self.publisher.RemoveChannel(request,self.__format_response)
+            return response
+
         elif request.path=="/changePubEmail":
             response=self.publisher.ChangeEmail(request,self.__format_response)
             return response
@@ -198,6 +227,9 @@ class ServiceHandler(Resource):
             response,channel=self.subscriber.SubscribeChannel(request,self.__format_response)
             return response
 
+        elif request.path=="/unsubChannel":
+            response,channel=self.subscriber.UnSubscribeChannel(request,self.__format_response)
+            return response
 
         elif request.path=="/changeSubEmail":
             response,oldEmail,newEmail=self.subscriber.ChangeEmail(request,self.__format_response)

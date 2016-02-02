@@ -67,17 +67,16 @@ def addSubscriber(name):
 
 def addMessage(channel,publisher,timestamp,message):
 	addPublisher(publisher)
-	addChannel(channel)
+	# addChannel(channel)
 
 	data=dict()
-	data['publisher']=publisher
 	data['timestamp']=timestamp
 	data['message']=message
 
 	pubData=publishers.objects.get(publisherName=publisher)
 	if not channel in pubData.channelList:
 		return False
-
+	data['publisher']=pubData.id
 	channelData=channels.objects.get(channelName=channel)
 	channelData.messages.append(data)
 	channelData.save()
@@ -94,6 +93,8 @@ def getMessages(subscriber,timestamp):
 		l=channelData.messages
 		for i in range(len(l)-1,-1,-1):
 			if l[i]['timestamp'] > timestamp:
+				pubData=publishers.objects.get(id=l[i]['publisher'])
+				l[i]['publisher']=pubData.publisherName
 				l[i]['channel']=channel
 				result.append(l[i])
 			else:
@@ -120,7 +121,19 @@ def addPubChannel(name,channel):
 		return True
 	else:
 		return False
-	
+
+
+def removePubChannel(name,channel):
+	addPublisher(name)
+	pubData=publishers.objects.get(publisherName=name)
+	if channel in pubData.channelList:
+		pubData.channelList.remove(channel)
+		pubData.save()
+		print "[Removing Channel] ",name,channel
+		return True
+	else:
+		return False
+
 
 def getLastTimestamp(subscriber):
 	addSubscriber(subscriber)
@@ -146,6 +159,8 @@ def getHistory(subscriber):
 		l=channelData.messages
 		for i in range(len(l)-1,-1,-1):
 			l[i]['channel']=channel
+			pubData=publishers.objects.get(id=l[i]['publisher'])
+			l[i]['publisher']=pubData.publisherName
 			result.append(l[i])
 	return result
 
@@ -162,12 +177,28 @@ def updateTimestamp(subscriber,timestamp):
 
 def addSubChannel(name,channel):
 	addSubscriber(name)
-	addChannel(channel)
+	try:
+		channels.objects.get(channelName=channel)
+	except:
+		return False
+
 	subData=subscribers.objects.get(subscriberName=name)
 	if not channel in subData.channelList:
 		subData.channelList.append(channel)
 		subData.save()
 		print "[Adding Channel] ",name,channel
+		return True
+	else:
+		return False
+
+
+def removeSubChannel(name,channel):
+	addSubscriber(name)
+	subData=subscribers.objects.get(subscriberName=name)
+	if channel in subData.channelList:
+		subData.channelList.remove(channel)
+		subData.save()
+		print "[Removing Channel] ",name,channel
 		return True
 	else:
 		return False

@@ -31,12 +31,13 @@ myApp.controller("Menu" ,function ($scope,$location,$window,ngNotify)
 myApp.controller("Publisher" ,function ($scope,$window,$location,ngNotify) 
 {
     $scope.addedChannelName="";
+    $scope.removedChannelName="";
     $scope.publishChannel="";
     $scope.newEmail="";
     $scope.userName=$window.userName;
     $scope.channelList=[];
 
-    $scope.AddPublishChannel = function()
+    $scope.RemovePublishChannel = function()
     {
     	if (!$window.userName)
     		$location.path('/');
@@ -44,7 +45,43 @@ myApp.controller("Publisher" ,function ($scope,$window,$location,ngNotify)
         ({
             type: "GET",
             // set the destination for the query
-            url: 'http://127.0.0.1:8000/pubAddChannel?username='+$window.userName+'&channel='+$scope.addedChannelName+'&callback=?',
+            url: 'http://172.27.30.175:8000/pubRemoveChannel?username='+$window.userName+'&channel='+$scope.removedChannelName+'&callback=?',
+            // define JSONP because we're using a different port and/or domain
+            dataType: 'jsonp',
+            // process a successful response
+            success: function(response) {
+                if (response.status)
+                {
+                    ngNotify.set("channel removed successfully");
+                    var index=$scope.channelList.indexOf($scope.removedChannelName);
+                    $scope.channelList.splice(index,1);
+                }
+                else
+                {
+                    ngNotify.set("error occured while removing channel");
+                }
+                $scope.removedChannelName="";
+                $scope.$apply();
+            },
+            // handle error
+            error: function(XMLHttpRequest, textStatus, errorThrown){
+                ngNotify.set("error occured while removing channel");
+                $scope.removedChannelName="";
+                $scope.$apply();
+            },
+        });
+
+    };
+
+    $scope.AddPublishChannel = function()
+    {
+        if (!$window.userName)
+            $location.path('/');
+        $.ajax
+        ({
+            type: "GET",
+            // set the destination for the query
+            url: 'http://172.27.30.175:8000/pubAddChannel?username='+$window.userName+'&channel='+$scope.addedChannelName+'&callback=?',
             // define JSONP because we're using a different port and/or domain
             dataType: 'jsonp',
             // process a successful response
@@ -71,6 +108,7 @@ myApp.controller("Publisher" ,function ($scope,$window,$location,ngNotify)
 
     };
 
+
     $scope.ChangeEmail = function()
     {
         ngNotify.set($scope.newEmail);
@@ -78,7 +116,7 @@ myApp.controller("Publisher" ,function ($scope,$window,$location,ngNotify)
         ({
             type: "GET",
             // set the destination for the query
-            url: 'http://127.0.0.1:8000/changePubEmail?username='+$window.userName+'&email='+$scope.newEmail+'&callback=?',
+            url: 'http://172.27.30.175:8000/changePubEmail?username='+$window.userName+'&email='+$scope.newEmail+'&callback=?',
             // define JSONP because we're using a different port and/or domain
             dataType: 'jsonp',
             // process a successful response
@@ -113,7 +151,7 @@ myApp.controller("Publisher" ,function ($scope,$window,$location,ngNotify)
         ({
             type: "GET",
             // set the destination for the query
-            url: 'http://127.0.0.1:8000/pubChannelList?username='+$window.userName+'&callback=?',
+            url: 'http://172.27.30.175:8000/pubChannelList?username='+$window.userName+'&callback=?',
             // define JSONP because we're using a different port and/or domain
             dataType: 'jsonp',
             // process a successful response
@@ -151,7 +189,7 @@ myApp.controller("Publisher" ,function ($scope,$window,$location,ngNotify)
         ({
             type: "GET",
             // set the destination for the query
-            url: 'http://127.0.0.1:8000/pub?username='+$window.userName+'&channel='+$scope.publishChannel+'&message='+$scope.message+'&callback=?',
+            url: 'http://172.27.30.175:8000/pub?username='+$window.userName+'&channel='+$scope.publishChannel+'&message='+$scope.message+'&callback=?',
             // define JSONP because we're using a different port and/or domain
             dataType: 'jsonp',
             // process a successful response
@@ -192,6 +230,7 @@ myApp.controller("Publisher" ,function ($scope,$window,$location,ngNotify)
 myApp.controller("Subscriber" ,function ($scope,$window,$location,$timeout,ngNotify) 
 {
 	$scope.addedChannelName="";
+    $scope.removedChannelName="";
     $scope.newEmail="";
     $scope.userName=$window.userName;
     $scope.messages=[];
@@ -204,7 +243,7 @@ myApp.controller("Subscriber" ,function ($scope,$window,$location,$timeout,ngNot
         ({
             type: "GET",
             // set the destination for the query
-            url: 'http://127.0.0.1:8000/subChannel?username='+$window.userName+'&channel='+$scope.addedChannelName+'&callback=?',
+            url: 'http://172.27.30.175:8000/subChannel?username='+$window.userName+'&channel='+$scope.addedChannelName+'&callback=?',
             // define JSONP because we're using a different port and/or domain
             dataType: 'jsonp',
             // process a successful response
@@ -234,6 +273,43 @@ myApp.controller("Subscriber" ,function ($scope,$window,$location,$timeout,ngNot
     	
     };
 
+
+    $scope.unsubscribeChannel = function()
+    {
+
+        $.ajax
+        ({
+            type: "GET",
+            // set the destination for the query
+            url: 'http://172.27.30.175:8000/unsubChannel?username='+$window.userName+'&channel='+$scope.removedChannelName+'&callback=?',
+            // define JSONP because we're using a different port and/or domain
+            dataType: 'jsonp',
+            // process a successful response
+            success: function(response) {
+                if (response.status)
+                {
+                    ngNotify.set("successfully unsubscribed to the channel");
+                    var index = $scope.channelList.indexOf($scope.removedChannelName);
+                    $scope.channelList.splice(index, 1);
+                }
+                else
+                {
+                    ngNotify.set("An error occured while unsubscribing the channel");
+                }
+                $scope.removedChannelName="";
+                $scope.$apply();
+            },
+            // handle error
+            error: function(XMLHttpRequest, textStatus, errorThrown){
+                $scope.removedChannelName="";
+                $scope.$apply();
+                ngNotify.set("An error occured while unsubscribing the channel");
+            },
+        });
+  
+    };
+
+
     $scope.ChangeEmail = function()
     {
         ngNotify.set($scope.newEmail);
@@ -241,7 +317,7 @@ myApp.controller("Subscriber" ,function ($scope,$window,$location,$timeout,ngNot
         ({
             type: "GET",
             // set the destination for the query
-            url: 'http://127.0.0.1:8000/changeSubEmail?username='+$window.userName+'&email='+$scope.newEmail+'&callback=?',
+            url: 'http://172.27.30.175:8000/changeSubEmail?username='+$window.userName+'&email='+$scope.newEmail+'&callback=?',
             // define JSONP because we're using a different port and/or domain
             dataType: 'jsonp',
             // process a successful response
@@ -277,7 +353,7 @@ myApp.controller("Subscriber" ,function ($scope,$window,$location,$timeout,ngNot
         ({
             type: "GET",
             // set the destination for the query
-            url: 'http://127.0.0.1:8000/subChannelList?username='+$window.userName+'&callback=?',
+            url: 'http://172.27.30.175:8000/subChannelList?username='+$window.userName+'&callback=?',
             // define JSONP because we're using a different port and/or domain
             dataType: 'jsonp',
             // process a successful response
@@ -311,7 +387,7 @@ myApp.controller("Subscriber" ,function ($scope,$window,$location,$timeout,ngNot
         ({
             type: "GET",
             // set the destination for the query
-            url: 'http://127.0.0.1:8000/getHistory?username='+$window.userName+'&callback=?',
+            url: 'http://172.27.30.175:8000/getHistory?username='+$window.userName+'&callback=?',
             // define JSONP because we're using a different port and/or domain
             dataType: 'jsonp',
             // process a successful response
@@ -348,7 +424,7 @@ myApp.controller("Subscriber" ,function ($scope,$window,$location,$timeout,ngNot
         {
             type: "GET",
             // set the destination for the query
-            url: 'http://127.0.0.1:8000/sub?user='+$window.userName+'&callback=?',
+            url: 'http://172.27.30.175:8000/sub?user='+$window.userName+'&callback=?',
             // define JSONP because we're using a different port and/or domain
             dataType: 'jsonp',
             // needs to be set to true to avoid browser loading icons
