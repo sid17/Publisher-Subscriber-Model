@@ -204,10 +204,10 @@ class ServiceHandler(Resource):
                 print len(self.subscribersList)
                 print "Saving the request",userId
             else:
+                db.updateTimestamp(userId,int(time.time()))
                 print "Sending the request",userId
 
             
-            db.updateTimestamp(userId,int(time.time()))
             # print "Updating Timestamp",db.updateTimestamp(userId,int(time.time()))
             return response   
 
@@ -251,12 +251,12 @@ class ServiceHandler(Resource):
 
     def handleEmailChange(self,oldEmail,newEmail):
         for request in self.subscribersList:
-            if (self.subscriberUserId[request]==oldEmail): 
-                db.updateTimestamp(newEmail,int(time.time()))    
-                response=self.__format_response(request, 1, {'messages':[]})
+            if (self.subscriberUserId[request]==oldEmail):    
+                response=self.__format_response(request, 0, {'messages':[]})
                 try:
                     request.write(response)
                     request.finish()
+                    db.updateTimestamp(newEmail,int(time.time())) 
                 except:
                     # Connection was lost
                     print 'connection lost before complete.'
@@ -271,7 +271,7 @@ class ServiceHandler(Resource):
         any data to return last time around.
         """    
         # run through delayed requests
-        print len(self.subscribersList)
+        print "Number of pending Requests:",len(self.subscribersList)
 
         for iterVal in xrange(len(self.subscribersList) - 1, -1, -1):
             request=self.subscribersList[iterVal]
@@ -279,7 +279,7 @@ class ServiceHandler(Resource):
             print "[processDelayedRequests]Current Request:",channel,self.subscriberUserId[request]
 
             if not self.subscriber.filterSubscriber(channel,self.subscriberUserId[request]):
-                db.updateTimestamp(self.subscriberUserId[request],int(time.time()))
+                # db.updateTimestamp(self.subscriberUserId[request],int(time.time()))
                 continue
 
             print "[processDelayedRequests]Sending Data ",channel,self.subscriberUserId[request]
@@ -288,18 +288,20 @@ class ServiceHandler(Resource):
             
 
             # write response and remove request from list if data is found
-            if not response==server.NOT_DONE_YET :
-                try:
-                    request.write(response)
-                    request.finish()
-                    db.updateTimestamp(self.subscriberUserId[request],int(time.time()))
-                except:
-                    # Connection was lost
-                    print 'connection lost before complete.'
-                finally:
-                    # Remove request from list
-                    self.subscribersList.remove(request)
-                    self.subscriberUserId.pop(request, None)
+            print "writing response"
+            print response
+            # if not response==server.NOT_DONE_YET :
+            try:
+                request.write(response)
+                request.finish()
+                db.updateTimestamp(self.subscriberUserId[request],int(time.time()))
+            except:
+                # Connection was lost
+                print 'connection lost before complete.'
+            finally:
+                # Remove request from list
+                self.subscribersList.remove(request)
+                self.subscriberUserId.pop(request, None)
 
 
     def __format_response(self, request, status, data):
